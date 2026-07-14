@@ -1,12 +1,10 @@
 {
   "name": "api",
-  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "uvicorn app.main:app --reload",
-    "start": "uvicorn app.main:app",
-    "lint": "ruff check .",
-    "format": "ruff format .",
-    "test": "pytest"
+    "dev": "uv run uvicorn app.main:app --reload",
+    "lint": "uv run ruff check .",
+    "format": "uv run ruff format .",
+    "test": "uv run pytest"
   }
 }
