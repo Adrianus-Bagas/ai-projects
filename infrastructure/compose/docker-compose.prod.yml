@@ -1,0 +1,130 @@
+# Memberi nama proyek Compose untuk lingkungan production.
+name: ai-workspace-prod
+
+# Mendefinisikan seluruh container yang dijalankan bersama.
+services:
+  # Mendefinisikan service antarmuka web Next.js.
+  web:
+    # Menyusun image web dari source code lokal.
+    build:
+      # Menetapkan root monorepo sebagai konteks build.
+      context: ../..
+      # Memilih Dockerfile khusus production untuk web.
+      dockerfile: infrastructure/docker/web/Dockerfile.prod
+      # Meneruskan nilai yang diperlukan ketika image dibangun.
+      args:
+        # Menetapkan URL API publik, atau memakai URL lokal jika variabel belum diisi.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    # Menerbitkan port web container ke port host yang dapat dikonfigurasi.
+    ports:
+      # Memetakan WEB_PORT host (default 3000) ke port 3000 container.
+      - "${WEB_PORT:-3000}:3000"
+    # Menyalakan kembali container kecuali dihentikan manual.
+    restart: unless-stopped
+    # Menentukan service yang harus dimulai lebih dahulu.
+    depends_on:
+      # Menyatakan web bergantung pada service API.
+      api:
+        # Menunggu container API dimulai sebelum membuat web.
+        condition: service_started
+    # Menghubungkan web ke jaringan internal aplikasi.
+    networks:
+      # Memasukkan web ke jaringan bernama ai-network.
+      - ai-network
+
+  # Mendefinisikan service FastAPI.
+  api:
+    # Menyusun image API dari source code lokal.
+    build:
+      # Menetapkan root monorepo sebagai konteks build.
+      context: ../..
+      # Memilih Dockerfile khusus production untuk API.
+      dockerfile: infrastructure/docker/api/Dockerfile.prod
+    # Menetapkan variabel lingkungan untuk API.
+    environment:
+      # Membentuk URL koneksi PostgreSQL dan mewajibkan password tersedia saat deployment.
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the deployment environment}@postgres:5432/${POSTGRES_DB:-ai_workspace}
+      # Menetapkan alamat service Qdrant di jaringan internal Compose.
+      QDRANT_URL: http://qdrant:6333
+      # Menetapkan origin browser yang diizinkan mengakses API.
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3000"]}
+    # Menerbitkan port API ke host.
+    ports:
+      # Memetakan API_PORT host (default 8000) ke port 8000 container.
+      - "${API_PORT:-8000}:8000"
+    # Menyalakan kembali API kecuali dihentikan manual.
+    restart: unless-stopped
+    # Menentukan dependency yang diperlukan API.
+    depends_on:
+      # Menyatakan API bergantung pada PostgreSQL.
+      postgres:
+        # Menunggu PostgreSQL benar-benar sehat sebelum API dibuat.
+        condition: service_healthy
+      # Menyatakan API bergantung pada Qdrant.
+      qdrant:
+        # Menunggu container Qdrant dimulai.
+        condition: service_started
+    # Menghubungkan API ke jaringan internal aplikasi.
+    networks:
+      # Memasukkan API ke ai-network.
+      - ai-network
+
+  # Mendefinisikan service database relasional PostgreSQL.
+  postgres:
+    # Menggunakan image PostgreSQL 17 berbasis Alpine.
+    image: postgres:17-alpine
+    # Menetapkan konfigurasi awal PostgreSQL.
+    environment:
+      # Menentukan nama database, dengan nilai default ai_workspace.
+      POSTGRES_DB: ${POSTGRES_DB:-ai_workspace}
+      # Menentukan pengguna database, dengan nilai default postgres.
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      # Mewajibkan password database diisi saat deployment.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the deployment environment}
+    # Memasang volume persisten untuk data PostgreSQL.
+    volumes:
+      # Menyimpan data database di volume bernama postgres_data.
+      - postgres_data:/var/lib/postgresql/data
+    # Menyalakan kembali database kecuali dihentikan manual.
+    restart: unless-stopped
+    # Memeriksa kesiapan PostgreSQL secara berkala.
+    healthcheck:
+      # Menjalankan pg_isready; tanda $$ mengirim simbol $ ke container, bukan Compose.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      # Mengulang pemeriksaan setiap lima detik.
+      interval: 5s
+      # Menganggap pemeriksaan gagal setelah lima detik.
+      timeout: 5s
+      # Mencoba pemeriksaan hingga sepuluh kali sebelum status menjadi tidak sehat.
+      retries: 10
+    # Menghubungkan database ke jaringan internal aplikasi.
+    networks:
+      # Memasukkan PostgreSQL ke ai-network.
+      - ai-network
+
+  # Mendefinisikan service vector database Qdrant.
+  qdrant:
+    # Menggunakan versi image Qdrant yang dipatok.
+    image: qdrant/qdrant:v1.16.2
+    # Memasang volume persisten untuk koleksi dan indeks Qdrant.
+    volumes:
+      # Menyimpan data Qdrant di volume bernama qdrant_data.
+      - qdrant_data:/qdrant/storage
+    # Menyalakan kembali Qdrant kecuali dihentikan manual.
+    restart: unless-stopped
+    # Menghubungkan Qdrant ke jaringan internal aplikasi.
+    networks:
+      # Memasukkan Qdrant ke ai-network.
+      - ai-network
+
+# Mendeklarasikan volume Docker yang digunakan service.
+volumes:
+  # Menyediakan penyimpanan persisten PostgreSQL.
+  postgres_data:
+  # Menyediakan penyimpanan persisten Qdrant.
+  qdrant_data:
+
+# Mendeklarasikan jaringan internal yang dipakai semua service.
+networks:
+  # Membuat jaringan bernama ai-network dengan driver default.
+  ai-network:

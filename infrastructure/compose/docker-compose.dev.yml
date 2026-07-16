@@ -1,0 +1,144 @@
+# Memberi nama proyek Compose untuk lingkungan development.
+name: ai-workspace-dev
+
+# Mendefinisikan seluruh container yang dijalankan bersama.
+services:
+  # Mendefinisikan service antarmuka web Next.js dengan hot reload.
+  web:
+    # Menyusun image web development dari source code lokal.
+    build:
+      # Menetapkan root monorepo sebagai konteks build.
+      context: ../..
+      # Memilih Dockerfile khusus development untuk web.
+      dockerfile: infrastructure/docker/web/Dockerfile.dev
+    # Memuat variabel lingkungan khusus aplikasi web.
+    env_file:
+      # Membaca file environment lokal Next.js.
+      - ../../apps/web/.env.local
+    # Menerbitkan port web container ke host.
+    ports:
+      # Memetakan WEB_PORT host (default 3000) ke port 3000 container.
+      - "${WEB_PORT:-3000}:3000"
+    # Memasang source dan dependency sebagai volume untuk hot reload.
+    volumes:
+      # Memasang seluruh monorepo host ke direktori kerja container.
+      - ../../:/app
+      # Menjaga dependency root container di volume terpisah dari host.
+      - web_node_modules:/app/node_modules
+      # Menjaga dependency aplikasi web container di volume terpisah dari host.
+      - web_app_node_modules:/app/apps/web/node_modules
+    # Menentukan service yang harus dimulai lebih dahulu.
+    depends_on:
+      # Menyatakan web bergantung pada API.
+      api:
+        # Menunggu container API dimulai.
+        condition: service_started
+    # Menghubungkan web ke jaringan internal aplikasi.
+    networks:
+      # Memasukkan web ke ai-network.
+      - ai-network
+
+  # Mendefinisikan service FastAPI dengan reload.
+  api:
+    # Menyusun image API development dari source code lokal.
+    build:
+      # Menetapkan root monorepo sebagai konteks build.
+      context: ../..
+      # Memilih Dockerfile khusus development untuk API.
+      dockerfile: infrastructure/docker/api/Dockerfile.dev
+    # Memuat variabel lingkungan khusus API.
+    env_file:
+      # Membaca file environment lokal API.
+      - ../../apps/api/.env
+    # Menetapkan alamat layanan lain yang dipakai API.
+    environment:
+      # Membentuk URL PostgreSQL dengan kredensial development default.
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-ai_workspace}
+      # Menetapkan alamat Qdrant di jaringan internal Compose.
+      QDRANT_URL: http://qdrant:6333
+    # Menerbitkan port API ke host.
+    ports:
+      # Memetakan API_PORT host (default 8000) ke port 8000 container.
+      - "${API_PORT:-8000}:8000"
+    # Memasang source host agar perubahan API langsung terlihat di container.
+    volumes:
+      # Memasang seluruh monorepo host ke direktori kerja utama.
+      - ../../:/app
+    # Menentukan dependency yang diperlukan API.
+    depends_on:
+      # Menyatakan API bergantung pada PostgreSQL.
+      postgres:
+        # Menunggu PostgreSQL siap menerima koneksi.
+        condition: service_healthy
+      # Menyatakan API bergantung pada Qdrant.
+      qdrant:
+        # Menunggu container Qdrant dimulai.
+        condition: service_started
+    # Menghubungkan API ke jaringan internal aplikasi.
+    networks:
+      # Memasukkan API ke ai-network.
+      - ai-network
+
+  # Mendefinisikan service PostgreSQL untuk development.
+  postgres:
+    # Menggunakan image PostgreSQL 17 berbasis Alpine.
+    image: postgres:17-alpine
+    # Memuat kredensial dan konfigurasi database dari file environment root.
+    env_file:
+      # Membaca file .env pada root monorepo.
+      - ../../.env
+    # Menerbitkan port PostgreSQL agar dapat diakses dari host.
+    ports:
+      # Memetakan POSTGRES_PORT host (default 5432) ke port database container.
+      - "${POSTGRES_PORT:-5432}:5432"
+    # Memasang volume persisten untuk data PostgreSQL.
+    volumes:
+      # Menyimpan data database di volume bernama postgres_data.
+      - postgres_data:/var/lib/postgresql/data
+    # Memeriksa kesiapan PostgreSQL secara berkala.
+    healthcheck:
+      # Menjalankan pg_isready; tanda $$ diteruskan sebagai $ ke container.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      # Mengulang pemeriksaan setiap lima detik.
+      interval: 5s
+      # Menganggap pemeriksaan gagal setelah lima detik.
+      timeout: 5s
+      # Mencoba pemeriksaan hingga sepuluh kali sebelum status menjadi tidak sehat.
+      retries: 10
+    # Menghubungkan database ke jaringan internal aplikasi.
+    networks:
+      # Memasukkan PostgreSQL ke ai-network.
+      - ai-network
+
+  # Mendefinisikan service vector database Qdrant untuk development.
+  qdrant:
+    # Menggunakan versi image Qdrant yang dipatok.
+    image: qdrant/qdrant:v1.16.2
+    # Menerbitkan port Qdrant agar dapat diakses dari host.
+    ports:
+      # Memetakan QDRANT_PORT host (default 6333) ke port Qdrant container.
+      - "${QDRANT_PORT:-6333}:6333"
+    # Memasang volume persisten untuk koleksi dan indeks Qdrant.
+    volumes:
+      # Menyimpan data Qdrant di volume bernama qdrant_data.
+      - qdrant_data:/qdrant/storage
+    # Menghubungkan Qdrant ke jaringan internal aplikasi.
+    networks:
+      # Memasukkan Qdrant ke ai-network.
+      - ai-network
+
+# Mendeklarasikan volume Docker yang digunakan service development.
+volumes:
+  # Menyediakan volume dependency root untuk web.
+  web_node_modules:
+  # Menyediakan volume dependency khusus aplikasi web.
+  web_app_node_modules:
+  # Menyediakan penyimpanan persisten PostgreSQL.
+  postgres_data:
+  # Menyediakan penyimpanan persisten Qdrant.
+  qdrant_data:
+
+# Mendeklarasikan jaringan internal yang dipakai semua service.
+networks:
+  # Membuat jaringan bernama ai-network dengan driver default.
+  ai-network:

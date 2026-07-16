@@ -1,13 +1,23 @@
+# Memakai Python 3.13 versi slim sebagai runtime API production.
 FROM python:3.13-slim
 
-WORKDIR /app
+# Menetapkan folder kerja agar import `app.*` dan virtual environment berada di lokasi konsisten.
+WORKDIR /app/apps/api
 
+# Mengambil binary uv dari image resminya.
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-COPY pyproject.toml uv.lock ./
+# Menyalin metadata dependency dari lokasi API dalam monorepo.
+COPY apps/api/pyproject.toml apps/api/uv.lock ./
 
-RUN uv sync --frozen
+# Menginstal dependency terkunci tanpa dependency khusus development seperti test tools.
+RUN uv sync --frozen --no-dev
 
-COPY app ./app
+# Menyalin kode FastAPI yang akan dijalankan.
+COPY apps/api/app ./app
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Mendokumentasikan port yang dipakai server FastAPI di dalam container.
+EXPOSE 8000
+
+# Menjalankan Uvicorn dari virtual environment, tanpa reload atau resolve dependency saat startup.
+CMD [".venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

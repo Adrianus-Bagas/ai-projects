@@ -1,13 +1,24 @@
-FROM python:3.13-slim
+# Memakai Python 3.12 versi slim sebagai lingkungan pengembangan API.
+FROM python:3.12-slim
 
-WORKDIR /app
+# Menetapkan direktori kerja agar import `app.*` konsisten.
+WORKDIR /app/apps/api
 
+# Mengambil binary uv dari image resminya tanpa memasang ulang melalui pip.
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-COPY pyproject.toml uv.lock ./
+# Menentukan lokasi virtual environment bersama agar tidak tertimpa bind mount source code.
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+# Menambahkan binary virtual environment ke PATH supaya `uvicorn` dapat dipanggil langsung.
+ENV PATH="/opt/venv/bin:$PATH"
 
+# Menyalin metadata dependency API untuk memanfaatkan cache layer Docker.
+COPY apps/api/pyproject.toml apps/api/uv.lock ./
+# Menginstal semua dependency yang terkunci, termasuk dependency development.
 RUN uv sync --frozen
 
-COPY app ./app
+# Mendokumentasikan port yang dipakai server FastAPI.
+EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+# Menjalankan Uvicorn dengan reload agar perubahan kode langsung diterapkan saat development.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -5,7 +5,9 @@ import { useEffect } from "react";
 
 export default function Home() {
   const initFetch = async () => {
-    const response = await fetch("http://localhost:8000/health");
+    // The public URL is injected per environment; the fallback keeps local use simple.
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+    const response = await fetch(`${apiUrl}/health`);
     if (!response) return;
     return response.json();
   };

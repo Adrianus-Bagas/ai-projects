@@ -8,3 +8,10 @@ __pycache__
 node_modules
 .next
 dist
+.pnpm-store
+.turbo
+**/node_modules
+**/.next
+**/dist
+**/.venv
+**/__pycache__

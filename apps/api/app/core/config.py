@@ -9,6 +9,12 @@ class Settings(BaseSettings):
 
     API_PREFIX: str = "/api/v1"
 
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+
+    DATABASE_URL: str
+    QDRANT_URL: str
+
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
     ]
@@ -20,5 +26,5 @@ class Settings(BaseSettings):
 
 
 @lru_cache
-def get_settings() -> Settings:
+def get_settings():
     return Settings()

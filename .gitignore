@@ -9,3 +9,8 @@ __pycache__
 .env
 
 .pytest_cache
+.agents
+.codex
+
+.vscode
+.pnpm-store

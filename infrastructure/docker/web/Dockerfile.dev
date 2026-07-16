@@ -1,11 +1,25 @@
+# Memakai Node.js 22 berbasis Debian slim sebagai lingkungan pengembangan web.
 FROM node:22-bookworm-slim
 
+# Menetapkan root monorepo sebagai direktori kerja di dalam container.
 WORKDIR /app
 
-COPY package.json ./
+# Mengaktifkan Corepack agar perintah pnpm tersedia.
+RUN corepack enable
 
-RUN pnpm install
+# Menyalin manifest root dan lockfile agar instalasi dependency dapat di-cache.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# Menyalin manifest aplikasi web yang akan dipilih oleh filter pnpm.
+COPY apps/web/package.json ./apps/web/package.json
+# Menginstal dependency web sesuai lockfile tanpa mengubah versinya.
+RUN pnpm install --frozen-lockfile --filter web...
+# Memindahkan dependency root ke lokasi cadangan agar tidak tertimpa bind mount saat development.
+RUN mv /app/node_modules /opt/node_modules
+# Memindahkan dependency khusus web ke lokasi cadangan untuk alasan yang sama.
+RUN mv /app/apps/web/node_modules /opt/web_node_modules
 
-COPY . .
+# Mendokumentasikan port default server development Next.js.
+EXPOSE 3000
 
-CMD ["pnpm", "dev"]
+# Memulihkan dependency bila perlu, lalu menjalankan Next.js dev server yang dapat diakses dari host.
+CMD ["sh", "-c", "if [ ! -d /app/node_modules/.pnpm ]; then cp -a /opt/node_modules/. /app/node_modules/; fi; if [ ! -e /app/apps/web/node_modules/next ]; then cp -a /opt/web_node_modules/. /app/apps/web/node_modules/; fi; exec pnpm --filter web dev --hostname 0.0.0.0"]
