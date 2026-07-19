@@ -5,5 +5,9 @@ version = "0.1.0"
 dependencies = [
     "fastapi",
     "uvicorn",
-    "pydantic-settings"
+    "alembic",
+    "database",
 ]
+
+[tool.uv.sources]
+database = { path = "../../packages/database", editable = true }
