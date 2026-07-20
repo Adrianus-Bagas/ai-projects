@@ -13,11 +13,23 @@ COPY apps/api/pyproject.toml apps/api/uv.lock ./apps/api/
 # Menyalin konfigurasi package database lokal.
 COPY packages/database/pyproject.toml ./packages/database/
 
+# Menyalin konfigurasi package auth lokal.
+COPY packages/auth/pyproject.toml ./packages/auth/
+
 # Menyalin README karena pyproject package database mereferensikannya.
 COPY packages/database/README.md ./packages/database/
 
 # Menyalin source code Python package database.
 COPY packages/database/database ./packages/database/database
+
+# Menyalin README karena pyproject package auth mereferensikannya.
+COPY packages/auth/README.md ./packages/auth/
+
+# Menyalin source code Python package auth.
+COPY packages/auth/auth ./packages/auth/auth
+
+# Menyalin source code Python package auth test.
+COPY packages/auth/tests ./packages/auth/tests
 
 # Berpindah ke folder project API.
 WORKDIR /app/apps/api

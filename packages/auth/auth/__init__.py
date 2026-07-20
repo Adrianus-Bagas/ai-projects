@@ -1,0 +1,1 @@
+"""Reusable authentication utilities for the AI Projects monorepo."""

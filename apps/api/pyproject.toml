@@ -7,7 +7,11 @@ dependencies = [
     "uvicorn",
     "alembic",
     "database",
+    "auth",
+    "pwdlib[argon2]>=0.3.0",
+    "pyjwt>=2.13.0",
 ]
 
 [tool.uv.sources]
 database = { path = "../../packages/database", editable = true }
+auth = { path = "../../packages/auth", editable = true }
