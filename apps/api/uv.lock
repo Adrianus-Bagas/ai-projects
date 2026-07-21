@@ -60,8 +60,6 @@ dependencies = [
     { name = "auth" },
     { name = "database" },
     { name = "fastapi" },
-    { name = "pwdlib", extra = ["argon2"] },
-    { name = "pyjwt" },
     { name = "uvicorn" },
 ]
 
@@ -71,8 +69,6 @@ requires-dist = [
     { name = "auth", editable = "../../packages/auth" },
     { name = "database", editable = "../../packages/database" },
     { name = "fastapi" },
-    { name = "pwdlib", extras = ["argon2"], specifier = ">=0.3.0" },
-    { name = "pyjwt", specifier = ">=2.13.0" },
     { name = "uvicorn" },
 ]
 
@@ -163,6 +159,16 @@ wheels = [
 name = "auth"
 version = "0.1.0"
 source = { editable = "../../packages/auth" }
+dependencies = [
+    { name = "pwdlib", extra = ["argon2"] },
+    { name = "pyjwt" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pwdlib", extras = ["argon2"], specifier = ">=0.3.0" },
+    { name = "pyjwt", specifier = ">=2.13.0" },
+]
 
 [[package]]
 name = "cffi"
