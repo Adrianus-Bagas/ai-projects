@@ -62,8 +62,11 @@ services:
       - "${API_PORT:-8000}:8000"
     # Memasang source host agar perubahan API langsung terlihat di container.
     volumes:
-      # Memasang seluruh monorepo host ke direktori kerja utama.
+      # Memasang seluruh monorepo host agar perubahan source langsung terlihat.
       - ../../:/app
+      # Menyimpan virtual environment Linux di volume Docker terpisah.
+      # Ini mencegah container menggunakan atau mengubah .venv Windows.
+      - api_venv:/app/apps/api/.venv
     # Menentukan dependency yang diperlukan API.
     depends_on:
       # Menyatakan API bergantung pada PostgreSQL.
@@ -135,6 +138,8 @@ volumes:
   web_app_node_modules:
   # Menyediakan penyimpanan persisten PostgreSQL.
   postgres_data:
+  # Menyimpan virtual environment Python khusus container API.
+  api_venv:
   # Menyediakan penyimpanan persisten Qdrant.
   qdrant_data:
 

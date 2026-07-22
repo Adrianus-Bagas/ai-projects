@@ -7,7 +7,8 @@ dependencies = [
     "uvicorn",
     "alembic",
     "database",
-    "auth"
+    "auth",
+    "email-validator>=2.3.0",
 ]
 
 [tool.uv.sources]
