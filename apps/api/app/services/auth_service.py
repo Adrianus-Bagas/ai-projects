@@ -17,14 +17,6 @@ class AuthService:
         self.jwt_secret_key = jwt_secret_key
         self.access_token_expire_minutes = access_token_expire_minutes
 
-    def create_access_token(self, subject: str) -> str:
-        access_token = jwt_utils.create_access_token(
-            subject,
-            self.jwt_secret_key,
-            timedelta(minutes=self.access_token_expire_minutes),
-        )
-        return access_token
-
     async def login(self, email: str, password: str) -> str | None:
         user = await self.user_repository.get_by_email(email)
     
@@ -33,5 +25,9 @@ class AuthService:
         if not verify_password(password, user.password_hash):
             return None
         
-        access_token = jwt_utils.create_access_token(str(user.id))
+        access_token = jwt_utils.create_access_token(
+            subject=str(user.id),
+            secret_key=self.jwt_secret_key,
+            expires_delta=timedelta(minutes=self.access_token_expire_minutes),
+        )
         return access_token
