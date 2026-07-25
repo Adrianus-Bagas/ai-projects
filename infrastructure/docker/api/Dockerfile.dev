@@ -16,6 +16,9 @@ COPY packages/database/pyproject.toml ./packages/database/
 # Menyalin konfigurasi package auth lokal.
 COPY packages/auth/pyproject.toml ./packages/auth/
 
+# Menyalin konfigurasi package shared lokal.
+COPY packages/shared/pyproject.toml ./packages/shared/
+
 # Menyalin README karena pyproject package database mereferensikannya.
 COPY packages/database/README.md ./packages/database/
 
@@ -30,6 +33,12 @@ COPY packages/auth/auth ./packages/auth/auth
 
 # Menyalin source code Python package auth test.
 COPY packages/auth/tests ./packages/auth/tests
+
+# Menyalin source code Python package shared.
+COPY packages/shared/shared ./packages/shared/shared
+
+# Menyalin source code Python package shared tests.
+COPY packages/shared/tests ./packages/shared/tests
 
 # Berpindah ke folder project API.
 WORKDIR /app/apps/api

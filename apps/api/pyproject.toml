@@ -8,9 +8,11 @@ dependencies = [
     "alembic",
     "database",
     "auth",
+    "shared",
     "email-validator>=2.3.0",
 ]
 
 [tool.uv.sources]
 database = { path = "../../packages/database", editable = true }
 auth = { path = "../../packages/auth", editable = true }
+shared = { path = "../../packages/shared", editable = true }
