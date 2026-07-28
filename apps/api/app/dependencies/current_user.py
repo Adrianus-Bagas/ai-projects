@@ -7,6 +7,7 @@ from app.core.config import Settings, get_settings
 from app.repositories.user_repository import UserRepository
 from app.dependencies.repositories import get_user_repository
 
+from database.models.user import User
 
 security = HTTPBearer()
 
@@ -15,7 +16,7 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     settings: Settings = Depends(get_settings),
     user_repository: UserRepository = Depends(get_user_repository)
-):
+) -> User:
     token = credentials.credentials
 
     try:
@@ -48,3 +49,14 @@ async def get_current_user(
         )
     
     return user
+
+async def get_current_active_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user",
+        )
+
+    return current_user

@@ -15,7 +15,7 @@ import uuid
 from uuid import UUID
 
 # SQLAlchemy Type untuk PostgreSQL.
-from sqlalchemy import Uuid, String, DateTime, func
+from sqlalchemy import Uuid, String, DateTime, func, Enum
 
 # ORM SQLAlchemy.
 from sqlalchemy.orm import Mapped, mapped_column
@@ -24,6 +24,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 from database.base import Base
 
 from datetime import datetime
+
+from database.models.enums import UserRole
 
 class User(Base):
     """
@@ -74,19 +76,31 @@ class User(Base):
     )
 
     created_at: Mapped[datetime] = mapped_column(
-    DateTime(timezone=True),
-    server_default=func.now(),
-    nullable=False,
-)
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
     
     updated_at: Mapped[datetime] = mapped_column(
-    DateTime(timezone=True),
-    server_default=func.now(),
-    onupdate=func.now(),
-    nullable=False,
-)
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
     
     is_active: Mapped[bool] = mapped_column(
-    default=True,
-    nullable=False,
-)
+        default=True,
+        nullable=False,
+    )
+    
+    role: Mapped[UserRole] = mapped_column(
+        Enum(
+            UserRole,
+            name="user_role",
+            values_callable=lambda enum_class: [
+                role.value for role in enum_class
+            ],
+        ),
+        default=UserRole.USER,
+        nullable=False,
+    )      

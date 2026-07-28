@@ -3,6 +3,7 @@ import asyncio
 from database.session import SessionLocal
 from sqlalchemy import select
 from database.models.user import User
+from database.models.enums import UserRole
 from auth.password import hash_password
 
 
@@ -19,7 +20,8 @@ async def seed_admin() -> None:
         admin = User(
             email="admin@example.com",
             password_hash=hash_password("admin123"),
-            name="Admin"
+            name="Admin",
+            role=UserRole.ADMIN
         )
         session.add(admin)
         

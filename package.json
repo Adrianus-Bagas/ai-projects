@@ -26,10 +26,11 @@
     "shell:web": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec web sh",
     "shell:db": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec postgres sh",
     "db:psql": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec postgres psql -U postgres",
-    "migration:upgrade": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec api alembic upgrade head",
-    "migration:downgrade": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec api alembic downgrade -1",
-    "migration:current": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec api alembic current",
-    "migration:history": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec api alembic history"
+    "migration:revision": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec api uv run alembic revision --autogenerate",
+    "migration:upgrade": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec api uv run alembic upgrade head",
+    "migration:downgrade": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec api uv run alembic downgrade -1",
+    "migration:current": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec api uv run alembic current",
+    "migration:history": "docker compose --env-file .env -f infrastructure/compose/docker-compose.dev.yml exec api uv run alembic history"
   },
   "devDependencies": {
     "turbo": "^2.10.4"

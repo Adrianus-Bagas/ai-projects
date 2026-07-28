@@ -25,6 +25,9 @@ COPY packages/database/README.md ./packages/database/
 # Menyalin source code Python package database.
 COPY packages/database/database ./packages/database/database
 
+# Menyalin source code Python package database tests.
+COPY packages/database/tests ./packages/database/tests
+
 # Menyalin README karena pyproject package auth mereferensikannya.
 COPY packages/auth/README.md ./packages/auth/
 
