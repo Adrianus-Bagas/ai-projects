@@ -1,5 +1,5 @@
-from app.services.auth_service import AuthService
-from app.repositories.user_repository import UserRepository
+from app.services.auth import AuthService
+from app.repositories.user import UserRepository
 from app.core.config import Settings, get_settings
 from fastapi import Depends
 from app.dependencies.repositories import get_user_repository

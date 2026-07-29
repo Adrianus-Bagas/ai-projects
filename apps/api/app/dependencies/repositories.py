@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.repositories.user_repository import UserRepository
+from app.repositories.user import UserRepository
 from fastapi import Depends
 from database.session import get_db
 

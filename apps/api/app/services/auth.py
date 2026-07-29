@@ -3,7 +3,7 @@ import auth.jwt as jwt_utils
 from datetime import timedelta
 
 from auth.password import verify_password
-from app.repositories.user_repository import UserRepository
+from app.repositories.user import UserRepository
 
 
 class AuthService:

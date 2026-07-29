@@ -25,3 +25,18 @@ class UserRepository:
         )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
+
+    async def save(
+        self,
+        user: User,
+    ) -> User:
+        await self.session.flush()
+        await self.session.refresh(user)
+
+        return user
+    
+    async def commit(self) -> None:
+        await self.session.commit()
+
+    async def rollback(self) -> None:
+        await self.session.rollback()

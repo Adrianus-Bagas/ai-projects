@@ -4,7 +4,7 @@ from jwt import InvalidTokenError
 
 from auth.jwt import decode_access_token
 from app.core.config import Settings, get_settings
-from app.repositories.user_repository import UserRepository
+from app.repositories.user import UserRepository
 from app.dependencies.repositories import get_user_repository
 
 from database.models.user import User

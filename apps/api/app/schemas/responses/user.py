@@ -13,3 +13,6 @@ class UserResponse(BaseModel):
     email: str
     role: UserRole
     is_active: bool
+
+class UpdateUserRoleRequest(BaseModel):
+    role: UserRole

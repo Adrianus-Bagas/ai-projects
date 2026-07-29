@@ -3,8 +3,8 @@ from uuid import UUID
 
 from app.dependencies.services.user import get_user_service
 from app.dependencies.require_roles import require_roles
-from app.schemas.responses.user import UserResponse
-from app.services.user_service import UserService
+from app.schemas.responses.user import UserResponse, UpdateUserRoleRequest
+from app.services.user import UserService
 from database.models.user import User, UserRole
 from shared.responses import ApiResponse
 
@@ -50,5 +50,31 @@ async def get_user_by_id(
     return ApiResponse[UserResponse](
         success=True,
         message="Get user success",
+        data=user,
+    )
+
+@router.patch(
+    "/users/{user_id}/role",
+    response_model=ApiResponse[UserResponse],
+)
+async def update_user_role(
+    user_id: UUID,
+    request: UpdateUserRoleRequest,
+    current_user: User = Depends(
+        require_roles(UserRole.ADMIN),
+    ),
+    user_service: UserService = Depends(
+        get_user_service,
+    ),
+) -> ApiResponse[UserResponse]:
+    user = await user_service.update_user_role(
+        user_id=user_id,
+        role=request.role,
+        current_user=current_user
+    )
+
+    return ApiResponse[UserResponse](
+        success=True,
+        message="Update user role success",
         data=user,
     )

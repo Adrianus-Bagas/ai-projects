@@ -5,7 +5,7 @@ from app.dependencies.current_user import get_current_active_user
 from app.dependencies.require_roles import require_roles
 from app.schemas.auth import LoginRequest, LoginResponse
 from app.schemas.responses.user import UserResponse
-from app.services.auth_service import AuthService
+from app.services.auth import AuthService
 from database.models.user import User, UserRole
 from shared.responses import ApiResponse
 from shared.errors import AppException
