@@ -2,6 +2,8 @@ from http import HTTPStatus
 from uuid import UUID
 
 from app.repositories.user import UserRepository
+from app.schemas.responses.user import UserResponse
+
 from database.models.enums import UserRole
 from database.models.user import User
 from shared.errors.constants import (
@@ -10,6 +12,11 @@ from shared.errors.constants import (
     SharedErrorCode,
 )
 from shared.errors.exceptions import AppException
+from shared.schemas.pagination import (
+    PaginationParams,
+    PaginationMeta,
+    PaginatedResponse,
+)
 
 
 class UserService:
@@ -19,8 +26,36 @@ class UserService:
     ) -> None:
         self.user_repository = user_repository
 
-    async def get_all_users(self) -> list[User]:
-        return await self.user_repository.get_all()
+    async def get_all_users(
+        self,
+        pagination: PaginationParams
+    ) -> PaginatedResponse[UserResponse]:
+        total_items = await self.user_repository.count()
+        
+        users = await self.user_repository.get_paginated(
+            pagination=pagination,
+        )
+        
+        total_pages = (
+            total_items + pagination.page_size - 1
+        ) // pagination.page_size
+        
+        pagination_meta = PaginationMeta(
+            page=pagination.page,
+            page_size=pagination.page_size,
+            total_items=total_items,
+            total_pages=total_pages,
+            has_next=pagination.page < total_pages,
+            has_previous=pagination.page > 1,
+        )
+        
+        return PaginatedResponse[UserResponse](
+            items=[
+                UserResponse.model_validate(user)
+                for user in users
+            ],
+            pagination=pagination_meta,
+        )
 
     async def get_user_by_id(
         self,

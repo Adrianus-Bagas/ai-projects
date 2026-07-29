@@ -1,7 +1,10 @@
-from database.models.user import User
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from uuid import UUID
+
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database.models.user import User
+from shared.schemas.pagination import PaginationParams
 
 
 class UserRepository:
@@ -22,6 +25,24 @@ class UserRepository:
     async def get_all(self) -> list[User]:
         statement = select(User).order_by(
             User.created_at.desc(),
+        )
+        result = await self.session.execute(statement)
+        return list(result.scalars().all())
+    
+    async def count(self) -> int:
+        statement = select(func.count()).select_from(User)
+        result = await self.session.execute(statement)
+        return result.scalar_one()
+    
+    async def get_paginated(
+        self, 
+        pagination: PaginationParams
+    ) -> list[User]:
+        statement = (
+            select(User)
+            .order_by(User.created_at.desc())
+            .limit(pagination.page_size)
+            .offset(pagination.offset)
         )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
