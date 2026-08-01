@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.user import User
-from shared.schemas.pagination import PaginationParams
+from shared.schemas import PaginationParams, UserSortingParams, SortOrder, UserSortField
 
 
 class UserRepository:
@@ -36,11 +36,31 @@ class UserRepository:
     
     async def get_paginated(
         self, 
-        pagination: PaginationParams
+        pagination: PaginationParams,
+        sorting: UserSortingParams,
     ) -> list[User]:
+        
+        sort_columns = {
+            UserSortField.CREATED_AT: User.created_at,
+            UserSortField.NAME: User.name,
+            UserSortField.EMAIL: User.email,
+            UserSortField.ROLE: User.role,
+        }
+        
+        sort_column = sort_columns[sorting.sort_by]
+        
+        order_expression = (
+            sort_column.asc()
+            if sorting.sort_order == SortOrder.ASC
+            else sort_column.desc()
+        )
+        
         statement = (
             select(User)
-            .order_by(User.created_at.desc())
+            .order_by(
+                order_expression,
+                User.id.asc(),
+            )
             .limit(pagination.page_size)
             .offset(pagination.offset)
         )

@@ -9,9 +9,10 @@ from app.services.user import UserService
 
 from database.models.user import User, UserRole
 from shared.responses import ApiResponse
-from shared.schemas.pagination import (
+from shared.schemas import (
     PaginatedResponse,
     PaginationParams,
+    UserSortingParams,
 )
 
 router = APIRouter()
@@ -28,6 +29,10 @@ async def get_users(
         PaginationParams,
         Depends(),
     ],
+    sorting: Annotated[
+        UserSortingParams,
+        Depends(),
+    ],
     _: User = Depends(
         require_roles(UserRole.ADMIN),
     ),
@@ -36,7 +41,8 @@ async def get_users(
     ),
 ) -> ApiResponse[PaginatedResponse[UserResponse]]:
     user_data = await user_service.get_all_users(
-        pagination=pagination
+        pagination=pagination,
+        sorting=sorting,
     )
     return ApiResponse[PaginatedResponse[UserResponse]](
         data=user_data,

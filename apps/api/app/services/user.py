@@ -12,10 +12,11 @@ from shared.errors.constants import (
     SharedErrorCode,
 )
 from shared.errors.exceptions import AppException
-from shared.schemas.pagination import (
+from shared.schemas import (
     PaginationParams,
     PaginationMeta,
     PaginatedResponse,
+    UserSortingParams,
 )
 
 
@@ -28,12 +29,14 @@ class UserService:
 
     async def get_all_users(
         self,
-        pagination: PaginationParams
+        pagination: PaginationParams,
+        sorting: UserSortingParams,
     ) -> PaginatedResponse[UserResponse]:
         total_items = await self.user_repository.count()
         
         users = await self.user_repository.get_paginated(
             pagination=pagination,
+            sorting=sorting,
         )
         
         total_pages = (
