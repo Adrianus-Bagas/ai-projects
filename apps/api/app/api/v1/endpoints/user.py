@@ -13,6 +13,7 @@ from shared.schemas import (
     PaginatedResponse,
     PaginationParams,
     UserSortingParams,
+    UserFilterParams,
 )
 
 router = APIRouter()
@@ -33,6 +34,10 @@ async def get_users(
         UserSortingParams,
         Depends(),
     ],
+    filters: Annotated[
+        UserFilterParams,
+        Depends(),
+    ],
     _: User = Depends(
         require_roles(UserRole.ADMIN),
     ),
@@ -43,6 +48,7 @@ async def get_users(
     user_data = await user_service.get_all_users(
         pagination=pagination,
         sorting=sorting,
+        filters=filters,
     )
     return ApiResponse[PaginatedResponse[UserResponse]](
         data=user_data,

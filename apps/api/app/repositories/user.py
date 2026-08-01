@@ -2,9 +2,10 @@ from uuid import UUID
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from database.models.user import User
-from shared.schemas import PaginationParams, UserSortingParams, SortOrder, UserSortField
+from shared.schemas import PaginationParams, UserSortingParams, SortOrder, UserSortField, UserFilterParams
 
 
 class UserRepository:
@@ -29,8 +30,18 @@ class UserRepository:
         result = await self.session.execute(statement)
         return list(result.scalars().all())
     
-    async def count(self) -> int:
-        statement = select(func.count()).select_from(User)
+    async def count(
+        self,
+        filters: UserFilterParams,
+    ) -> int:
+        conditions = self._build_filters(filters)
+        
+        statement = (
+            select(func.count())
+            .select_from(User)
+            .where(*conditions)
+        )
+        
         result = await self.session.execute(statement)
         return result.scalar_one()
     
@@ -38,7 +49,9 @@ class UserRepository:
         self, 
         pagination: PaginationParams,
         sorting: UserSortingParams,
+        filters: UserFilterParams,
     ) -> list[User]:
+        conditions = self._build_filters(filters)
         
         sort_columns = {
             UserSortField.CREATED_AT: User.created_at,
@@ -57,6 +70,7 @@ class UserRepository:
         
         statement = (
             select(User)
+            .where(*conditions)
             .order_by(
                 order_expression,
                 User.id.asc(),
@@ -81,3 +95,17 @@ class UserRepository:
 
     async def rollback(self) -> None:
         await self.session.rollback()
+    
+    def _build_filters(
+            self,
+            filters: UserFilterParams,
+    ) -> list[ColumnElement[bool]]:
+        conditions: list[ColumnElement[bool]] = []
+
+        if filters.role is not None:
+            conditions.append(User.role == filters.role)
+
+        if filters.is_active is not None:
+            conditions.append(User.is_active == filters.is_active)
+
+        return conditions

@@ -17,6 +17,7 @@ from shared.schemas import (
     PaginationMeta,
     PaginatedResponse,
     UserSortingParams,
+    UserFilterParams,
 )
 
 
@@ -31,12 +32,16 @@ class UserService:
         self,
         pagination: PaginationParams,
         sorting: UserSortingParams,
+        filters: UserFilterParams,
     ) -> PaginatedResponse[UserResponse]:
-        total_items = await self.user_repository.count()
+        total_items = await self.user_repository.count(
+            filters=filters,
+        )
         
         users = await self.user_repository.get_paginated(
             pagination=pagination,
             sorting=sorting,
+            filters=filters,
         )
         
         total_pages = (
