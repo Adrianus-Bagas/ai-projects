@@ -29,6 +29,19 @@ class BaseRepository(Generic[ModelType]):
     ) -> ModelType | None:
         statement = select(self.model).where(
             self.model.id == entity_id,
+            self.model.deleted_at.is_(None),
+        )
+
+        result = await self.session.execute(statement)
+
+        return result.scalar_one_or_none()
+
+    async def get_by_id_including_deleted(
+        self,
+        entity_id: UUID,
+    ) -> ModelType | None:
+        statement = select(self.model).where(
+            self.model.id == entity_id,
         )
 
         result = await self.session.execute(statement)
@@ -49,8 +62,8 @@ class BaseRepository(Generic[ModelType]):
         self.session.add(entity)
         
     async def delete(
-    self,
-    entity: ModelType,
+        self,
+        entity: ModelType,
     ) -> ModelType:
         entity.deleted_at = datetime.now(timezone.utc)
 

@@ -24,7 +24,10 @@ class UserRepository(BaseRepository[User]):
         )
 
     async def get_by_email(self, email: str) -> User | None:
-        statement = select(User).where(User.email == email)
+        statement = select(User).where(
+            User.email == email,
+            User.deleted_at.is_(None),
+        )
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 
@@ -84,6 +87,10 @@ class UserRepository(BaseRepository[User]):
             filters: UserFilterParams,
     ) -> list[ColumnElement[bool]]:
         conditions: list[ColumnElement[bool]] = []
+        
+        conditions.append(
+            User.deleted_at.is_(None)
+        )
 
         if filters.role is not None:
             conditions.append(User.role == filters.role)
