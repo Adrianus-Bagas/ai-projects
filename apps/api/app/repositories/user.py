@@ -1,35 +1,33 @@
 from uuid import UUID
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 
+from.base import BaseRepository
+
 from database.models.user import User
-from shared.schemas import PaginationParams, UserSortingParams, SortOrder, UserSortField, UserFilterParams
+from shared.schemas import (
+    PaginationParams, 
+    UserSortingParams, 
+    SortOrder, 
+    UserSortField, 
+    UserFilterParams,
+)
 
 
-class UserRepository:
+class UserRepository(BaseRepository[User]):
     def __init__(self, session: AsyncSession) -> None:
-        self.session = session
+        super().__init__(
+            session=session,
+            model=User,
+        )
 
     async def get_by_email(self, email: str) -> User | None:
         statement = select(User).where(User.email == email)
         result = await self.session.execute(statement)
         return result.scalar_one_or_none()
 
-    async def get_by_id(self, user_id: UUID) -> User | None:
-        statement = select(User).where(User.id == user_id)
-        result = await self.session.execute(statement)
-
-        return result.scalar_one_or_none()
-    
-    async def get_all(self) -> list[User]:
-        statement = select(User).order_by(
-            User.created_at.desc(),
-        )
-        result = await self.session.execute(statement)
-        return list(result.scalars().all())
-    
     async def count(
         self,
         filters: UserFilterParams,
@@ -81,21 +79,6 @@ class UserRepository:
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 
-    async def save(
-        self,
-        user: User,
-    ) -> User:
-        await self.session.flush()
-        await self.session.refresh(user)
-
-        return user
-    
-    async def commit(self) -> None:
-        await self.session.commit()
-
-    async def rollback(self) -> None:
-        await self.session.rollback()
-    
     def _build_filters(
             self,
             filters: UserFilterParams,
@@ -107,5 +90,14 @@ class UserRepository:
 
         if filters.is_active is not None:
             conditions.append(User.is_active == filters.is_active)
-
+            
+        if filters.search is not None:
+            search_pattern = f"%{filters.search}%"
+            conditions.append(
+                or_(
+                    User.name.ilike(search_pattern),
+                    User.email.ilike(search_pattern),
+                )
+            )
+            
         return conditions

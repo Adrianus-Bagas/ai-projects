@@ -39,7 +39,7 @@ async def get_current_user(
         )
 
     user = await user_repository.get_by_id(
-        user_id=user_id
+        entity_id=user_id
     )
     
     if user is None:

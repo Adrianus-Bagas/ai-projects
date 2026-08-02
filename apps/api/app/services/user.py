@@ -70,7 +70,7 @@ class UserService:
         user_id: UUID,
     ) -> User:
         user = await self.user_repository.get_by_id(
-            user_id=user_id,
+            entity_id=user_id,
         )
 
         if user is None:
@@ -103,7 +103,7 @@ class UserService:
             user.role = role
 
             updated_user = await self.user_repository.save(
-                user=user,
+                entity=user,
             )
 
             await self.user_repository.commit()
