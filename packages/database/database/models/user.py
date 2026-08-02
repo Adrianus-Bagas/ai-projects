@@ -22,13 +22,17 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 # Base ORM kita.
 from database.base import Base
-from database.mixins import SoftDeleteMixin
+from database.mixins import SoftDeleteMixin, AuditTimestampMixin
 
 from datetime import datetime
 
 from database.models.enums import UserRole
 
-class User(SoftDeleteMixin, Base):
+class User(
+    AuditTimestampMixin,
+    SoftDeleteMixin, 
+    Base,
+):
     """
     Model ORM untuk tabel users.
 
@@ -74,19 +78,6 @@ class User(SoftDeleteMixin, Base):
         nullable=False,
         unique=True,
         index=True,
-    )
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
-    )
-    
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
     )
     
     is_active: Mapped[bool] = mapped_column(
