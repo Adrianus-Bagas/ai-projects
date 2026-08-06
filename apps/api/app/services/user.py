@@ -17,8 +17,10 @@ from shared.schemas import (
     PaginationParams,
     PaginationMeta,
     PaginatedResponse,
+)
+from app.schemas.user_query import (
+    UserFilterParams, 
     UserSortingParams,
-    UserFilterParams,
 )
 
 

@@ -12,8 +12,10 @@ from shared.responses import ApiResponse
 from shared.schemas import (
     PaginatedResponse,
     PaginationParams,
+)
+from app.schemas.user_query import (
+    UserFilterParams, 
     UserSortingParams,
-    UserFilterParams,
 )
 
 router = APIRouter()

@@ -4,15 +4,18 @@ from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 
+from app.schemas.user_query import (
+    UserFilterParams, 
+    UserSortField, 
+    UserSortingParams,
+)
+
 from.base import BaseRepository
 
 from database.models.user import User
 from shared.schemas import (
     PaginationParams, 
-    UserSortingParams, 
     SortOrder, 
-    UserSortField, 
-    UserFilterParams,
 )
 
 
