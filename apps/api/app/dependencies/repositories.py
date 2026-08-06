@@ -3,5 +3,5 @@ from app.repositories.user import UserRepository
 from fastapi import Depends
 from database.session import get_db
 
-async def get_user_repository(session: AsyncSession = Depends(get_db)) -> UserRepository:
-    return UserRepository(session)
+def get_user_repository(session: AsyncSession = Depends(get_db)) -> UserRepository:
+    return UserRepository(session=session)
