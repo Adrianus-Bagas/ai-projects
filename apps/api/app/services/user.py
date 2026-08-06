@@ -3,6 +3,7 @@ from uuid import UUID
 
 from app.repositories.user import UserRepository
 from app.schemas.responses.user import UserResponse
+from app.core.transaction import TransactionManager
 
 from database.models.enums import UserRole
 from database.models.user import User
@@ -25,8 +26,10 @@ class UserService:
     def __init__(
         self,
         user_repository: UserRepository,
+        transaction_manager: TransactionManager,
     ) -> None:
         self.user_repository = user_repository
+        self.transaction_manager = transaction_manager
 
     async def get_all_users(
         self,
@@ -98,17 +101,12 @@ class UserService:
                 message=CANNOT_CHANGE_OWN_ROLE_ERROR_MESSAGE,
                 error_code=SharedErrorCode.CANNOT_CHANGE_OWN_ROLE,
             )
-
-        try:
+        
+        async with self.transaction_manager:
             user.role = role
-
+            
             updated_user = await self.user_repository.save(
                 entity=user,
             )
-
-            await self.user_repository.commit()
-
-            return updated_user
-        except Exception:
-            await self.user_repository.rollback()
-            raise
+        
+        return updated_user        

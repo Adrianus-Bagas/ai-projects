@@ -5,6 +5,7 @@ from sqlalchemy.orm.exc import StaleDataError
 
 from app.repositories.user import UserRepository
 from database.session import SessionLocal
+from app.core.transaction import TransactionManager
 
 async def test_optimistic_locking(
     user_id: UUID,
@@ -41,20 +42,37 @@ async def test_optimistic_locking(
             )
 
             user_b.name = f"{user_b.name} B"
+            
+            transaction_manager_b = TransactionManager(
+                session=session_b,
+            )
 
             try:
-                await repository_b.save(user_b)
-                await repository_b.commit()
+                async with transaction_manager_b:
+                    await repository_b.save(
+                        entity=user_b,
+                    )
             except StaleDataError:
-                await repository_b.rollback()
-
                 print(
-                    "Optimistic locking worked: "
-                    "Session B used a stale version."
+                    "Optimistic locking worked and "
+                    "TransactionManager handled rollback."
+                )
+                session_b.expire_all()
+
+                fresh_user = await repository_b.get_by_id(
+                    entity_id=user_id,
+                )
+            
+                if fresh_user is None:
+                    raise ValueError("User not found after rollback")
+            
+                print(
+                    "Session B usable after rollback:",
+                    fresh_user.version,
                 )
             else:
                 print(
-                    "Unexpected: Session B commit succeeded."
+                    "Unexpected: Session B update succeeded."
                 )
 
 async def main() -> None:
