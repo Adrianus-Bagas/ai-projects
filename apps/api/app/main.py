@@ -1,12 +1,20 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm.exc import StaleDataError
 
 from app.api.router import api_router
 from app.core.config import get_settings
 
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
-from shared.errors import AppException, app_exception_handler, validation_exception_handler, http_exception_handler, unexpected_exception_handler
+from shared.errors import ( 
+    AppException, 
+    app_exception_handler, 
+    validation_exception_handler, 
+    http_exception_handler, 
+    unexpected_exception_handler,
+    stale_data_exception_handler,
+)
 
 settings = get_settings()
 
@@ -23,6 +31,10 @@ app.add_exception_handler(
 app.add_exception_handler(
     HTTPException,
     http_exception_handler,
+)
+app.add_exception_handler(
+    StaleDataError,
+    stale_data_exception_handler,
 )
 app.add_exception_handler(
     Exception,

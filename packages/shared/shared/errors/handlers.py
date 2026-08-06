@@ -1,6 +1,7 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
+from sqlalchemy.orm.exc import StaleDataError
 
 from shared.errors.mappers import map_http_error_code
 
@@ -19,7 +20,8 @@ import logging
 from shared.errors.constants import (
     SharedErrorCode,
     VALIDATION_ERROR_MESSAGE,
-    INTERNAL_SERVER_ERROR_MESSAGE
+    INTERNAL_SERVER_ERROR_MESSAGE,
+    RESOURCE_CONFLICT_MESSAGE
 )
 
 logger = logging.getLogger(__name__)
@@ -112,5 +114,27 @@ async def unexpected_exception_handler(
 
     return JSONResponse(
         status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+        content=response.model_dump(exclude_none=True),
+    )
+
+async def stale_data_exception_handler(
+    request: Request,
+    exc: StaleDataError,
+) -> JSONResponse:
+    logger.warning(
+        "Optimistic locking conflict while processing %s %s",
+        request.method,
+        request.url.path,
+    )
+
+    response = ErrorResponse(
+        message=RESOURCE_CONFLICT_MESSAGE,
+        error=ErrorDetail(
+            code=SharedErrorCode.RESOURCE_CONFLICT,
+        ),
+    )
+
+    return JSONResponse(
+        status_code=HTTPStatus.CONFLICT,
         content=response.model_dump(exclude_none=True),
     )

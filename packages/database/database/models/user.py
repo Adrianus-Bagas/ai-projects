@@ -22,13 +22,14 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 # Base ORM kita.
 from database.base import Base
-from database.mixins import SoftDeleteMixin, AuditTimestampMixin
+from database.mixins import SoftDeleteMixin, AuditTimestampMixin, VersionMixin
 
 from datetime import datetime
 
 from database.models.enums import UserRole
 
 class User(
+    VersionMixin,
     AuditTimestampMixin,
     SoftDeleteMixin, 
     Base,
