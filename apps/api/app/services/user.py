@@ -2,12 +2,14 @@ from http import HTTPStatus
 from uuid import UUID
 
 from app.repositories.user import UserRepository
+from app.repositories.audit_log import AuditLogRepository
 from app.schemas.responses.user import UserResponse
 from app.core.transaction import TransactionManager
 from app.events.user import UserRoleChanged
 
-from database.models.enums import UserRole
+from database.models.enums import UserRole, AuditAction
 from database.models.user import User
+from database.models.audit_log import AuditLog
 from shared.errors.constants import (
     CANNOT_CHANGE_OWN_ROLE_ERROR_MESSAGE,
     USER_NOT_FOUND_ERROR_MESSAGE,
@@ -29,9 +31,11 @@ class UserService:
     def __init__(
         self,
         user_repository: UserRepository,
+        audit_log_repository: AuditLogRepository,
         transaction_manager: TransactionManager,
     ) -> None:
         self.user_repository = user_repository
+        self.audit_log_repository = audit_log_repository
         self.transaction_manager = transaction_manager
 
     async def get_all_users(
@@ -115,6 +119,24 @@ class UserService:
             
             updated_user = await self.user_repository.save(
                 entity=user,
+            )
+            
+            audit_log = AuditLog(
+                actor_id=current_user.id,
+                action=AuditAction.UPDATE,
+                entity_type="user",
+                entity_id=user.id,
+                event_name="user.role_change",
+                changes={
+                    "role": {
+                        "old": old_role.value,
+                        "new": role.value,
+                    }
+                },
+            )
+            
+            await self.audit_log_repository.add(
+                audit_log=audit_log,
             )
             
             self.transaction_manager.add_event(
