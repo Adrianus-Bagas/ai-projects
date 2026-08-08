@@ -2,15 +2,58 @@ import asyncio
 from uuid import uuid4
 
 from app.core.transaction import TransactionManager
+from app.events.base import DomainEvent
 from app.events.user import UserRoleChanged
+from app.events.bus import EventBus
 from database.models.enums import UserRole
 from database.session import SessionLocal
 
+async def handle_user_role_changed(
+    event: DomainEvent,
+) -> None:
+    print(
+        "EventBus received:",
+        type(event).__name__,
+    )
+
+async def successful_handler(
+    event: DomainEvent,
+) -> None:
+    print(
+        "Successful handler received:",
+        type(event).__name__,
+    )
+
+async def failing_handler(
+    event: DomainEvent,
+) -> None:
+    print(
+        "Failing handler received:",
+        type(event).__name__,
+    )
+
+    raise RuntimeError(
+        "Simulated event handler failure"
+    )
 
 async def test_committed_event() -> None:
     async with SessionLocal() as session:
+        
+        event_bus = EventBus()
+        
+        event_bus.subscribe(
+            UserRoleChanged,
+            failing_handler,
+        )
+        
+        event_bus.subscribe(
+            UserRoleChanged,
+            successful_handler,
+        )
+        
         transaction_manager = TransactionManager(
             session=session,
+            event_bus=event_bus,
         )
 
         event = UserRoleChanged(
@@ -20,12 +63,13 @@ async def test_committed_event() -> None:
             new_role=UserRole.ADMIN,
         )
 
-        async with transaction_manager:
-            transaction_manager.add_event(event)
-
+        try:
+            async with transaction_manager:
+                transaction_manager.add_event(event)
+        except RuntimeError as exc:
             print(
-                "Inside transaction:",
-                transaction_manager.commited_events,
+                "Handler error:",
+                exc,
             )
 
         print(
@@ -35,8 +79,16 @@ async def test_committed_event() -> None:
 
 async def test_rollback_discards_event() -> None:
     async with SessionLocal() as session:
+        event_bus = EventBus()
+        
+        event_bus.subscribe(
+            UserRoleChanged,
+            failing_handler,
+        )
+        
         transaction_manager = TransactionManager(
             session=session,
+            event_bus=event_bus,
         )
 
         event = UserRoleChanged(
