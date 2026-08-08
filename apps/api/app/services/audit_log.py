@@ -34,17 +34,9 @@ class AuditLogService:
             filters=filters,
         )
 
-        total_pages = (
-            total_items + pagination.page_size - 1
-        ) // pagination.page_size
-
-        pagination_meta = PaginationMeta(
-            page=pagination.page,
-            page_size=pagination.page_size,
+        pagination_meta = PaginationMeta.create(
+            pagination=pagination,
             total_items=total_items,
-            total_pages=total_pages,
-            has_next=pagination.page < total_pages,
-            has_previous=pagination.page > 1,
         )
 
         return PaginatedResponse[AuditLogResponse](

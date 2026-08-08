@@ -22,6 +22,25 @@ class PaginationMeta(BaseModel):
     total_pages: int
     has_next: bool
     has_previous: bool
+    
+    @classmethod
+    def create(
+        cls,
+        pagination: PaginationParams,
+        total_items: int,
+    ) -> "PaginationMeta":
+        total_pages = (
+            total_items + pagination.page_size - 1
+        ) // pagination.page_size
+
+        return cls(
+            page=pagination.page,
+            page_size=pagination.page_size,
+            total_items=total_items,
+            total_pages=total_pages,
+            has_next=pagination.page < total_pages,
+            has_previous=pagination.page > 1,
+        )
 
 
 class PaginatedResponse(BaseModel, Generic[T]):
