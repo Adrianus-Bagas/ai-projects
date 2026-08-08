@@ -4,6 +4,7 @@ from uuid import UUID
 from app.repositories.user import UserRepository
 from app.schemas.responses.user import UserResponse
 from app.core.transaction import TransactionManager
+from app.events.user import UserRoleChanged
 
 from database.models.enums import UserRole
 from database.models.user import User
@@ -104,11 +105,25 @@ class UserService:
                 error_code=SharedErrorCode.CANNOT_CHANGE_OWN_ROLE,
             )
         
+        if user.role == role:
+            return user
+        
+        old_role = user.role
+        
         async with self.transaction_manager:
             user.role = role
             
             updated_user = await self.user_repository.save(
                 entity=user,
+            )
+            
+            self.transaction_manager.add_event(
+                UserRoleChanged(
+                    actor_id=current_user.id,
+                    user_id=user.id,
+                    old_role=old_role,
+                    new_role=role,
+                )
             )
         
         return updated_user        
