@@ -15,16 +15,14 @@ import uuid
 from uuid import UUID
 
 # SQLAlchemy Type untuk PostgreSQL.
-from sqlalchemy import Uuid, String, DateTime, func, Enum
+from sqlalchemy import Uuid, String, Enum
 
 # ORM SQLAlchemy.
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # Base ORM kita.
 from database.base import Base
 from database.mixins import SoftDeleteMixin, AuditTimestampMixin, VersionMixin
-
-from datetime import datetime
 
 from database.models.enums import UserRole
 
@@ -97,3 +95,9 @@ class User(
         default=UserRole.USER,
         nullable=False,
     )      
+    
+    organization_memberships: Mapped[
+        list["OrganizationMembership"]
+    ] = relationship(
+        back_populates="user",
+    )

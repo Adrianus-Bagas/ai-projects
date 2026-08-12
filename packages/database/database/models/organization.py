@@ -18,7 +18,7 @@ from uuid import UUID
 from sqlalchemy import Uuid, String
 
 # ORM SQLAlchemy.
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # Base ORM kita.
 from database.base import Base
@@ -68,4 +68,10 @@ class Organization(
         String(255),
         nullable=False,
         unique=True,
+    )
+    
+    memberships: Mapped[
+        list["OrganizationMembership"]
+    ] = relationship(
+        back_populates="organization",
     )

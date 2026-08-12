@@ -10,3 +10,8 @@ class AuditAction(StrEnum):
     UPDATE = "update"
     DELETE = "delete"
     RESTORE = "restore"
+    
+class OrganizationRole(StrEnum):
+    OWNER = "owner"
+    ADMIN = "admin"
+    MEMBER = "member"
