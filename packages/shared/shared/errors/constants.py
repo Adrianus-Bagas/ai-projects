@@ -10,6 +10,7 @@ class SharedErrorCode(StrEnum):
     INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR"
     CANNOT_CHANGE_OWN_ROLE = "CANNOT_CHANGE_OWN_ROLE"
     RESOURCE_CONFLICT = "RESOURCE_CONFLICT"
+    NOT_IN_ORGANIZATION = "NOT_IN_ORGANIZATION"
 
 
 VALIDATION_ERROR_MESSAGE = "Request validation failed"
@@ -20,3 +21,4 @@ RESOURCE_CONFLICT_MESSAGE = (
     "The resource was modified by another request. "
     "Please refresh the data and try again."
 )
+NOT_IN_ORGANIZATION = "You are not in this organization."
